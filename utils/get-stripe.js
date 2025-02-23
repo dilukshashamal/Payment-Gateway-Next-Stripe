@@ -1,3 +1,4 @@
+//utils/get-stripe.js
 import { loadStripe } from '@stripe/stripe-js';
 
 let stripePromise;

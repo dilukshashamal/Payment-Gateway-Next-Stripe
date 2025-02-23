@@ -1,3 +1,5 @@
+//components/CheckoutPage.js
+
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -10,9 +12,10 @@ const CheckoutPage = ({ amount }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Refs to mount the Payment Element
+  // Refs for mounting Payment Element and storing Elements instance
   const paymentElementRef = useRef(null);
   const paymentElementInstanceRef = useRef(null);
+  const elementsRef = useRef(null);
 
   // Load Stripe instance
   useEffect(() => {
@@ -37,9 +40,11 @@ const CheckoutPage = ({ amount }) => {
   // Once both stripe and clientSecret are available, create and mount the Payment Element
   useEffect(() => {
     if (stripe && clientSecret && paymentElementRef.current) {
-      // Create a new Elements instance with the client secret
+      // Create a new Elements instance with the client secret and store it
       const elements = stripe.elements({ clientSecret });
-      // Create the Payment Element
+      elementsRef.current = elements;
+
+      // Create the Payment Element and mount it
       const paymentElement = elements.create("payment");
       paymentElement.mount(paymentElementRef.current);
       paymentElementInstanceRef.current = paymentElement;
@@ -48,13 +53,13 @@ const CheckoutPage = ({ amount }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!stripe || !clientSecret) return;
+    if (!stripe || !clientSecret || !elementsRef.current) return;
     setLoading(true);
     setErrorMessage("");
 
     // Confirm the payment using the Payment Element
     const { error } = await stripe.confirmPayment({
-      clientSecret,
+      elements: elementsRef.current, // Pass the Elements instance here
       confirmParams: {
         return_url: `http://localhost:3000/payment-success?amount=${amount}`,
       },
